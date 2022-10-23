@@ -4,12 +4,12 @@
 
 class shardRenderPane : public wxGLCanvas
 {
-private:
+protected:
    wxGLContext* m_context;
 
 public:
    shardRenderPane(wxWindow* parent);
-   ~shardRenderPane();
-   void Render(wxPaintEvent& evt);
+   virtual ~shardRenderPane();
+   virtual void Render(wxPaintEvent& evt) = 0;
    wxDECLARE_EVENT_TABLE();
 };
