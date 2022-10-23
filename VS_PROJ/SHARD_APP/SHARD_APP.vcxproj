@@ -133,13 +133,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\shardModelEditorPane.cpp" />
     <ClCompile Include="src\shardRenderPane.cpp" />
     <ClCompile Include="src\shardApp.cpp" />
+    <ClCompile Include="src\shardWelcomePane.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\shardApp.h" />
     <ClInclude Include="include\shard.h" />
+    <ClInclude Include="include\shardModelEditorPane.h" />
     <ClInclude Include="include\shardRenderPane.h" />
+    <ClInclude Include="include\shardWelcomePane.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
