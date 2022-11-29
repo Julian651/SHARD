@@ -1,56 +1,54 @@
 #include "shardWelcomePane.h"
 #include <wx/dcclient.h>
-#include <GL/freeglut.h>
 
 shardWelcomePane::shardWelcomePane(wxWindow* parent) : shardRenderPane(parent)
 {
-   glClearColor(0.f, 0.f, 0.f, 0.f);
+   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+   glEnable(GL_DEPTH_TEST);
+   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 }
 
 void shardWelcomePane::Render(wxPaintEvent& evt)
 {
-   wxGLCanvas::SetCurrent(*shardRenderPane::m_context);
+   //wxGLCanvas::SetCurrent(*shardRenderPane::m_context);
    wxPaintDC(this);
 
-   glLoadIdentity();
-   glMatrixMode(GL_MODELVIEW);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-   glClear(GL_COLOR_BUFFER_BIT);
+   // Do the magic
 
-   for (int i = 0; i < 25; i++)
-   {
-      float x = (float)i / 1000.f;
-      glPushMatrix();
-      glColor3f(0.f, 0.1f, 1.f);
-      glTranslatef(-0.51f - x, 0.f, 0.f);
-      glScalef(0.0025f, 0.0025f, 1.f);
-      glutStrokeString(GLUT_STROKE_ROMAN, (unsigned char*)"SHARD");
-      glPopMatrix();
-   }
+   // First render the scene box
+   GLint size;
 
-   glBegin(GL_QUADS);
-   glColor3f(1.f, 0.f, 0.f);
-   glVertex2f(-0.25f, -0.6f);
-   glVertex2f(0.25f, -0.6f);
-   glVertex2f(0.25f, -0.1f);
-   glVertex2f(-0.25f, -0.1f);
-   glEnd();
+   glUseProgram(m_program->ID);
+   glBindVertexArray(m_VAO);
+   glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+   glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 
-   glFlush();
+   auto model = glm::translate(glm::mat4(1.f), glm::vec3(0.f));
+   auto view = glm::lookAt(glm::vec3(0.f, 0.f, 100.f), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f));
+   auto projection = glm::perspective(glm::radians(45.f), 1.f * m_width / m_height, 0.1f, 160.f);
+   auto mvp = projection * view * model;
+   glUniformMatrix4fv(m_program->GetUniform("m_transform"), 1, GL_FALSE, glm::value_ptr(mvp));
+
+   glVertexAttribPointer(0, 3, GL_INT, GL_FALSE, 0, (GLvoid*)0);
+   glDrawElements(GL_LINES, size / sizeof(GLuint), GL_UNSIGNED_INT, 0);
+
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+   glBindVertexArray(0);
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
    SwapBuffers();
 }
 
 void shardWelcomePane::onResize(wxSizeEvent& evt)
 {
-   int w, h;
-   this->GetParent()->GetSize(&w, &h);
-   glViewport(0, 0, w, h);
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(-(w>>1), w>>1, -(h>>1), h>>1, 0, 0);
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-   Refresh(); // refresh window.
+   GLfloat width = static_cast<GLfloat>(evt.GetSize().x);
+   GLfloat height = static_cast<GLfloat>(evt.GetSize().y);
+   glViewport(0, 0, width, height);
+   m_width = width;
+   m_height = height;
 }
 
 wxBEGIN_EVENT_TABLE(shardWelcomePane, shardRenderPane)
