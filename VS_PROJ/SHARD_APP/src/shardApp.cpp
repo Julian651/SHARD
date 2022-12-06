@@ -2,6 +2,7 @@
 #include "shardApp.h"
 #include "shardWelcomePane.h"
 #include <wx/notebook.h>
+#include "toolbar.h"
 
 bool shardApp::OnInit()
 {
@@ -152,7 +153,7 @@ shardMainFrame::shardMainFrame(wxWindow* parent) : wxFrame(parent, wxID_ANY, wxT
 
    m_menuBar = new shardMenuBar;
 
-   auto toolBar = new shardToolBar(this);
+   auto toolBar = new Toolbar(this);
 
    wxPanel* panel = new wxPanel(this);
    //wxFlexGridSizer* panelSizer = new wxFlexGridSizer(1, 1, 0, 0);
