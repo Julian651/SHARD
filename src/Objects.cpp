@@ -181,10 +181,24 @@ Line::Line(glm::vec3 pos, glm::vec3 rot)
    m_pos = pos;
 }
 
-void Line::Move(glm::vec3 pos, glm::vec3 rot)
+void Line::Move(glm::vec3 camPos, glm::vec3 ray, float len)
 {
-   m_pos = pos;
-   m_rot = rot;
+   GLfloat vertices[] = {
+      camPos.x, camPos.y, camPos.z,
+      (camPos.x + ray.x * len), (camPos.y + ray.y * len), (camPos.z + ray.z * len)
+   };
+   GLuint indices[] = {
+      0, 1,
+      1, 0
+   };
+   glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void Line::_init()
@@ -196,7 +210,7 @@ void Line::_init()
 
 
    // define data here
-   GLint vertices[] = {
+   GLfloat vertices[] = {
       0, 0, -1,
       0, 0, 1
    };
@@ -226,7 +240,7 @@ void Line::_destroy()
 
 void Line::_declare_attrib_pointers()
 {
-   glVertexAttribPointer(0, 3, GL_INT, GL_FALSE, 0, (GLvoid*)0);
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
    glEnableVertexAttribArray(0);
 }
 
@@ -239,9 +253,17 @@ void Line::_draw()
 
 glm::mat4 Line::Model()
 {
+   //rotate = glm::rotate(rotate, m_rot.y, glm::vec3(1.f, 0.f, 0.f));
+   //rotate = glm::rotate(rotate, m_rot.z, glm::vec3(0.f, 0.f, 1.f));
+
    auto translate = glm::translate(glm::mat4(1.f), m_pos);
-   auto rotate = glm::rotate(translate, m_rot.x, glm::vec3(0.f, -1.f, 0.f));
-   auto rotate2 = glm::rotate(rotate, m_rot.y, glm::vec3(1.f, 0.f, 0.f));
-   auto rotate3 = glm::rotate(rotate2, m_rot.z, glm::vec3(0.f, 0.f, 0.5f));
-   return rotate3;
+
+   auto model = translate;
+
+   //auto translate = glm::translate(glm::mat4(1.f), m_pos);
+   //auto rotate = glm::rotate(translate, m_rot.x, glm::vec3(0.f, -1.f, 0.f));
+   //auto rotate2 = glm::rotate(rotate, m_rot.y, glm::vec3(1.f, 0.f, 0.f));
+   //auto rotate3 = glm::rotate(rotate2, m_rot.z, glm::vec3(0.f, 0.f, 1.f));
+   //auto scale = glm::scale(rotate3, glm::vec3(1.f, 1.f, 100.f));
+   return model;
 }

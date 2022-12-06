@@ -44,7 +44,7 @@ void sGLCanvas::OnSize(wxSizeEvent& event)
 	int ny = event.GetSize().y;
 
 	m_screenWidth = nx;
-	m_screenHeight = nx;
+	m_screenHeight = ny;
 
 	glViewport(0, 0, nx, ny);
 
@@ -176,6 +176,10 @@ void sGLCanvas::OnMouseMove(wxMouseEvent& event)
 		m_view = glm::lookAt(cam.Position(), cam.Position() + cam.Looking(), glm::vec3(0.f, 1.f, 0.f));
 		Refresh(true);
 	}
+	if (event.ButtonIsDown(wxMOUSE_BTN_LEFT))
+	{
+		OnLMouseClick(event);
+	}
 }
 
 void sGLCanvas::OnRMouseClick(wxMouseEvent& event)
@@ -187,14 +191,15 @@ void sGLCanvas::OnLMouseClick(wxMouseEvent& event)
 {
 	int mouse_x = event.GetX();
 	int mouse_y = event.GetY();
-	float x = (2.f * static_cast<float>(mouse_x)) / m_screenWidth - 1.f;
-	float y = 1.f - (2.f * static_cast<float>(mouse_y)) / m_screenHeight;
+
+	float x = (2.f * static_cast<float>(mouse_x)) / static_cast<float>(m_screenWidth) - 1.f;
+	float y = 1.f - (2.f * static_cast<float>(mouse_y)) / static_cast<float>(m_screenHeight);
 	float z = 1.f;
 	glm::vec3 ray_nds = glm::vec3(x, y, z);
 
 	glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.f, 1.f);
 
-	auto projection = glm::perspective(glm::radians(45.f), 1.f * static_cast<float>(m_screenWidth / m_screenHeight), 0.1f, 160.f);
+	auto projection = glm::perspective(glm::radians(45.f), 1.f * static_cast<float>(m_screenWidth) / static_cast<float>(m_screenHeight), 0.1f, 160.f);
 	glm::vec4 ray_eye = glm::inverse(projection) * ray_clip;
 
 	ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1.f, 0.f);
@@ -205,7 +210,7 @@ void sGLCanvas::OnLMouseClick(wxMouseEvent& event)
 
 	ray_wor = glm::normalize(ray_wor);
 
-	l.Move(cam.Position() + cam.Looking(), ray_wor);
+	l.Move(cam.Position() - cam.Looking(), ray_wor, 300.f);
 
 	Refresh(true);
 }

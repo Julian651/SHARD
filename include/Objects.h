@@ -59,5 +59,5 @@ private:
 public:
 
    Line(glm::vec3 pos = glm::vec3(0.f), glm::vec3 rot = glm::vec3(0.f));
-   void Move(glm::vec3 pos, glm::vec3 rot);
+   void Move(glm::vec3 camPos, glm::vec3 ray, float len);
 };
