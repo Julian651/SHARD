@@ -1,15 +1,25 @@
 #pragma once
+#include <RenderUtilities.h>
 #include <wx/glcanvas.h>
-#include <GL/glut.h>
 
 class shardRenderPane : public wxGLCanvas
 {
-private:
+protected:
+
+   GLuint m_VAO;
+   GLuint m_VBO;
+   GLuint m_EBO;
+
+   GLfloat m_width;
+   GLfloat m_height;
+
+   ShaderProgram* m_program;;
+
    wxGLContext* m_context;
 
 public:
    shardRenderPane(wxWindow* parent);
-   ~shardRenderPane();
-   void Render(wxPaintEvent& evt);
+   virtual ~shardRenderPane();
+   virtual void Render(wxPaintEvent& evt) = 0;
    wxDECLARE_EVENT_TABLE();
 };
