@@ -1,4 +1,6 @@
 #include <RenderUtilities.h>
+#include <Toolbar.h>
+#include <shard.h>
 #include <Objects.h>
 #include <sApp.h>
 #include <wx/dcclient.h>
@@ -16,15 +18,179 @@ bool sApp::OnInit()
 
 // ====================================================================================================================
 
+sMenuBar::sMenuBar(eMode mode) : wxMenuBar(wxBORDER_NONE)
+{
+   m_menuFile = new wxMenu;
+   m_menuEdit = new wxMenu;
+   m_menuView = new wxMenu;
+   m_menuSettings = new wxMenu;
+   m_menuHelp = new wxMenu;
+
+   m_menuFile->Append(shardMENU_NEW);
+   m_menuFile->Append(shardMENU_OPEN);
+   m_itemSave     = new wxMenuItem(m_menuFile, shardMENU_SAVE);
+   m_itemSaveAs   = new wxMenuItem(m_menuFile, shardMENU_SAVEAS);
+   m_itemSaveAll  = new wxMenuItem(m_menuFile, shardMENU_SAVEALL, wxT("Save All"));
+   m_itemClose    = new wxMenuItem(m_menuFile, shardMENU_CLOSE);
+   m_itemCloseAll = new wxMenuItem(m_menuFile, shardMENU_CLOSE_ALL, wxT("Close All"));
+   m_itemRun      = new wxMenuItem(m_menuFile, shardMENU_RUN_SIM, wxT("Run Sim"));
+   m_menuFile->AppendSeparator();
+   m_menuFile->Append(shardMENU_EXIT);
+
+   m_menuEdit->Append(shardMENU_UNDO);
+   m_menuEdit->Append(shardMENU_REDO);
+   m_itemAddProjEvent = new wxMenuItem(m_menuEdit, shardMENU_ADDPROJ,
+      wxT("Add Projectile Event..."));
+
+   m_menuView->Append(shardMENU_TOGTOOLBAR, wxT("Toggle Toolbar"));
+   m_menuView->Append(shardMENU_TOGSTATUSBAR, wxT("Toggle Status Bar"));
+   m_menuView->Append(shardMENU_ZOOMIN);
+   m_menuView->Append(shardMENU_ZOOMOUT);
+   m_menuView->Append(shardMENU_ROTATE, wxT("Rotate..."));
+   m_menuView->Append(shardMENU_TRANSLATE, wxT("Translate..."));
+   m_menuView->Append(shardMENU_ROTANDTRANS, wxT("Rotate and Translate"));
+
+   m_menuSettings->Append(shardMENU_KEYBINDINGS, wxT("Keybindings..."));
+
+   m_menuHelp->Append(shardMENU_ABOUT);
+
+   this->Append(m_menuFile, wxT("File"));
+   this->Append(m_menuSettings, wxT("Settings"));
+   this->Append(m_menuHelp, wxT("Help"));
+
+   //Set(mode);
+}
+
+sMenuBar::~sMenuBar()
+{
+   Set(eMode::SIMULATION); // set mode to mode where all menus are being used for automatic deletion via wxwidgets
+}
+
+void sMenuBar::Set(eMode mode)
+{
+   if (m_currentMode == mode)
+   {
+      return;
+   }
+
+   switch (mode)
+   {
+      case eMode::DEFAULT:
+      {
+         m_menuFile->Remove(shardMENU_SAVE);
+         m_menuFile->Remove(shardMENU_SAVEAS);
+         m_menuFile->Remove(shardMENU_SAVEALL);
+         m_menuFile->Remove(shardMENU_CLOSE);
+         m_menuFile->Remove(shardMENU_CLOSE_ALL);
+         m_menuFile->Remove(shardMENU_RUN_SIM);
+
+         this->Remove(size_t(1)); // remove edit menu
+         this->Remove(size_t(1)); // remove view menu
+
+         if (m_currentMode == eMode::SIMULATION)
+         {
+            m_menuEdit->Remove(shardMENU_ADDPROJ);
+         }
+      }
+      break;
+      case eMode::SIMULATION:
+      {
+         m_menuEdit->Append(m_itemAddProjEvent);
+         if (m_currentMode == eMode::PHYSICAL)
+         {
+            break;
+         }
+      }
+      case eMode::PHYSICAL:
+      {
+
+         if (m_currentMode == eMode::SIMULATION)
+         {
+            m_menuEdit->Remove(shardMENU_ADDPROJ);
+         }
+         else
+         {
+            m_menuFile->Insert(2, m_itemSave);
+            m_menuFile->Insert(3, m_itemSaveAs);
+            m_menuFile->Insert(4, m_itemSaveAll);
+            m_menuFile->Insert(5, m_itemClose);
+            m_menuFile->Insert(6, m_itemCloseAll);
+            m_menuFile->Insert(7, m_itemRun);
+            this->Insert(1, m_menuEdit, "Edit");
+            this->Insert(2, m_menuView, "View");
+         }
+
+      }
+      break;
+   }
+   m_currentMode = mode;
+}
+
+// ====================================================================================================================
+
 wxIMPLEMENT_APP(sApp);
 
 sFrame::sFrame() : wxFrame(nullptr, wxID_ANY, _("OpenGL wxtest"), wxPoint(300, 300), wxSize(1200, 720))
 {
+    m_menuBar = new sMenuBar;
+
+   auto toolBar = new Toolbar(this);
+
+   wxPanel* panel = new wxPanel(this);
+    
 	wxGLAttributes attribs;
-
 	attribs.PlatformDefaults().Defaults().EndList();
+	wxGLCanvas* canvas = new sGLCanvas(panel, attribs);
+    
+   wxBoxSizer* bs = new wxBoxSizer(wxHORIZONTAL);
+   bs->Add(canvas, wxSizerFlags(1).Expand());
+   panel->SetSizer(bs);
 
-	wxGLCanvas* canvas = new sGLCanvas(this, attribs);
+   wxFlexGridSizer* frameSizer = new wxFlexGridSizer(2, 1, 1, 0);
+   frameSizer->AddGrowableRow(1);
+   frameSizer->AddGrowableCol(0);
+   frameSizer->Add(toolBar, wxSizerFlags(1));
+   frameSizer->Add(panel, wxSizerFlags(1).Expand());
+   this->SetSizer(frameSizer);
+
+   this->SetMenuBar(m_menuBar);
+   this->CreateStatusBar();
+
+   auto menuMode = new wxMenu;
+   menuMode->Append(10, wxT("DEF"));
+   menuMode->Append(11, wxT("SIM"));
+   menuMode->Append(12, wxT("PHY"));
+   m_menuBar->Append(menuMode, wxT("Mode"));
+   this->Bind(wxEVT_MENU, [this](wxCommandEvent& evt)
+      {
+         switch (evt.GetId())
+         {
+         case 10:
+         {
+            this->m_menuBar->Set(eMode::DEFAULT);
+         }
+         break;
+         case 11:
+         {
+            this->m_menuBar->Set(eMode::SIMULATION);
+         }
+         break;
+         case 12:
+         {
+            this->m_menuBar->Set(eMode::PHYSICAL);
+         }
+         break;
+         case shardMENU_NEW:
+         {
+				std::cout << "Testing new menu item functionality\n";
+         }
+         break;
+         }
+      });
+}
+
+sFrame::~sFrame()
+{
 }
 
 // ====================================================================================================================
@@ -246,9 +412,9 @@ sGLCanvas::sGLCanvas(wxWindow* parent, wxGLAttributes& canvasAttribs) : wxGLCanv
 	Hexagon::Initialize();
 	Cube::Initialize();
 	Line::Initialize();
-	Bind(Line);
-	Bind(Hexagon);
-	Bind(Object<Cube>);
+	GLBind(Line);
+	GLBind(Hexagon);
+	GLBind(Object<Cube>);
 
 	cam.Move(glm::vec3(0.f, 0.f, 100.f));
 	m_view = glm::lookAt(cam.Position(), cam.Position() + cam.Looking(), glm::vec3(0.f, 1.f, 0.f));

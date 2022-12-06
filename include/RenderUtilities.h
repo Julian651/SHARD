@@ -155,87 +155,87 @@ public:
 // ====================================================================================================================
 
 inline void BlenderData(const char* fileName, std::vector<GLfloat>& outVertices, std::vector<GLuint>& outIndices)
-{
-   std::vector<GLfloat> vertices;
-   std::vector<GLfloat> uvs;
-   std::vector<GLfloat> normals;
-   std::vector<GLuint> vertIndices, uvIndices, normalIndices;
+   {
+      std::vector<GLfloat> vertices;
+      std::vector<GLfloat> uvs;
+      std::vector<GLfloat> normals;
+      std::vector<GLuint> vertIndices, uvIndices, normalIndices;
 
-   std::ifstream infile;
+      std::ifstream infile;
    infile.open(fileName, std::ios::in);
 
-   if (!infile.is_open())
-   {
-      fprintf(stderr, "error\n");
-      return;
-   }
-   infile.seekg(0, std::ios::beg);
-   while (infile.peek() != EOF)
-   {
-      char ch;
-      infile.read(&ch, 1);
-      if (ch == 'v')
+      if (!infile.is_open())
       {
-         GLfloat x, y, z;
+         fprintf(stderr, "error\n");
+         return;
+      }
+      infile.seekg(0, std::ios::beg);
+      while (infile.peek() != EOF)
+      {
+         char ch;
          infile.read(&ch, 1);
-         if (ch == ' ')
+         if (ch == 'v')
          {
-            infile >> x >> y >> z;
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(z);
+            GLfloat x, y, z;
+            infile.read(&ch, 1);
+            if (ch == ' ')
+            {
+               infile >> x >> y >> z;
+               vertices.push_back(x);
+               vertices.push_back(y);
+               vertices.push_back(z);
+            }
+            else if (ch == 'n')
+            {
+               infile >> x >> y >> z;
+               normals.push_back(x);
+               normals.push_back(y);
+               normals.push_back(z);
+            }
+            else if (ch == 't')
+            {
+               infile >> x >> y;
+               uvs.push_back(x);
+               uvs.push_back(y);
+            }
          }
-         else if (ch == 'n')
+         else if (ch == 'f')
          {
-            infile >> x >> y >> z;
-            normals.push_back(x);
-            normals.push_back(y);
-            normals.push_back(z);
-         }
-         else if (ch == 't')
-         {
-            infile >> x >> y;
-            uvs.push_back(x);
-            uvs.push_back(y);
+            infile.read(&ch, 1); // space
+            while (ch != '\n')
+            {
+               GLuint v1, v2, v3, n1, n2, n3, t1, t2, t3;
+               infile >> v1;
+               infile.read(&ch, 1); // slash
+               infile >> t1;
+               infile.read(&ch, 1); // slash
+               infile >> n1;
+               infile.read(&ch, 1); // space
+               infile >> v2;
+               infile.read(&ch, 1); // slash
+               infile >> t2;
+               infile.read(&ch, 1); // slash
+               infile >> n2;
+               infile.read(&ch, 1); // space
+               infile >> v3;
+               infile.read(&ch, 1); // slash
+               infile >> t3;
+               infile.read(&ch, 1); // slash
+               infile >> n3;
+               infile.read(&ch, 1); // new line
+               vertIndices.push_back(v1 - 1);
+               vertIndices.push_back(v2 - 1);
+               vertIndices.push_back(v3 - 1);
+               normalIndices.push_back(n1 - 1);
+               normalIndices.push_back(n2 - 1);
+               normalIndices.push_back(n3 - 1);
+               uvIndices.push_back(t1 - 1);
+               uvIndices.push_back(t2 - 1);
+               uvIndices.push_back(t3 - 1);
+            }
          }
       }
-      else if (ch == 'f')
-      {
-         infile.read(&ch, 1); // space
-         while (ch != '\n')
-         {
-            GLuint v1, v2, v3, n1, n2, n3, t1, t2, t3;
-            infile >> v1;
-            infile.read(&ch, 1); // slash
-            infile >> t1;
-            infile.read(&ch, 1); // slash
-            infile >> n1;
-            infile.read(&ch, 1); // space
-            infile >> v2;
-            infile.read(&ch, 1); // slash
-            infile >> t2;
-            infile.read(&ch, 1); // slash
-            infile >> n2;
-            infile.read(&ch, 1); // space
-            infile >> v3;
-            infile.read(&ch, 1); // slash
-            infile >> t3;
-            infile.read(&ch, 1); // slash
-            infile >> n3;
-            infile.read(&ch, 1); // new line
-            vertIndices.push_back(v1 - 1);
-            vertIndices.push_back(v2 - 1);
-            vertIndices.push_back(v3 - 1);
-            normalIndices.push_back(n1 - 1);
-            normalIndices.push_back(n2 - 1);
-            normalIndices.push_back(n3 - 1);
-            uvIndices.push_back(t1 - 1);
-            uvIndices.push_back(t2 - 1);
-            uvIndices.push_back(t3 - 1);
-         }
-      }
-   }
-   infile.close();
+      infile.close();
 
    outVertices = vertices;
    outIndices = vertIndices;
