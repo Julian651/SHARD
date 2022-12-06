@@ -14,7 +14,7 @@ enum class eShaderType
    VERTEX, FRAGMENT
 };
 
-GLuint inline compileShader(const char* filename, eShaderType type)
+inline GLuint compileShader(const char* filename, eShaderType type)
 {
    GLchar* buffer;
 
@@ -79,7 +79,7 @@ struct ShaderProgram
       glDeleteProgram(ID);
    }
 
-   void inline Attach(GLuint shader, eShaderType type)
+   inline void Attach(GLuint shader, eShaderType type)
    {
       if (type == eShaderType::VERTEX)
       {
@@ -91,7 +91,7 @@ struct ShaderProgram
       }
    }
 
-   void inline Attach(GLuint vertexShader, GLuint fragmentShader)
+   inline void Attach(GLuint vertexShader, GLuint fragmentShader)
    {
       glAttachShader(ID, vertexShader);
       glAttachShader(ID, fragmentShader);
@@ -108,7 +108,7 @@ struct ShaderProgram
       return attrib;
    }
 
-   GLint inline GetUniform(const char* uniformName)
+   inline GLint GetUniform(const char* uniformName)
    {
       GLint uniform = glGetUniformLocation(ID, uniformName);
       if (uniform == -1)
@@ -119,7 +119,7 @@ struct ShaderProgram
       return uniform;
    }
 
-   void inline Link()
+   inline void Link()
    {
       GLint success;
       GLchar infoLog[512];
@@ -129,14 +129,11 @@ struct ShaderProgram
       if (!success)
       {
          glGetProgramInfoLog(ID, 512, NULL, infoLog);
-
-         OutputDebugStringA(infoLog);
          fprintf(stderr, "ERROR::SHADER::PROGRAM::LINKING_FAILED\n %s", infoLog);
       }
    }
 };
 
-/*
 // ====================================================================================================================
 
 class Camera
@@ -157,177 +154,15 @@ public:
 
 // ====================================================================================================================
 
-template <class T>
-class Scene
-{
-private:
-
-   static GLuint m_VAO;
-   static GLsizei m_numBuffers;
-   static std::vector<GLuint> m_VBOS;
-   static std::vector<GLuint> m_EBOS;
-   static bool m_initialized;
-
-   static void inline AddBufferObj()
+inline void BlenderData(const char* fileName, std::vector<GLfloat>& outVertices, std::vector<GLuint>& outIndices)
    {
-      m_numBuffers += 1;
-      GLuint VBO;
-      GLuint EBO;
-      glGenBuffers(1, &VBO);
-      glGenBuffers(1, &EBO);
-      m_VBOS.push_back(VBO);
-      m_EBOS.push_back(EBO);
-
-      assert(m_numBuffers == m_VBOS.size() && m_numBuffers == m_EBOS.size());
-   }
-
-protected:
-
-   const glm::vec3 m_pos;
-   const GLsizei m_width;
-   const GLsizei m_height;
-   const GLsizei m_depth;
-
-public:
-
-   inline Scene(glm::vec3 pos = glm::vec3(0.0), GLsizei height = 50, GLsizei width = 50, GLsizei depth = 50) : m_pos(pos), m_width(width), m_height(height), m_depth(depth)
-   {
-
-      GLsizei l, w, h;
-      l = depth >> 1;
-      w = width >> 1;
-      h = height >> 1;
-      GLint vertices[] = {
-         // front
-         -1 * w, -1 * h,  1 * l,
-          1 * w, -1 * h,  1 * l,
-          1 * w,  1 * h,  1 * l,
-         -1 * w,  1 * h,  1 * l,
-         // back
-         -1 * w, -1 * h, -1 * l,
-          1 * w, -1 * h, -1 * l,
-          1 * w,  1 * h, -1 * l,
-         -1 * w,  1 * h, -1 * l
-      };
-      GLuint indices[] = {
-         0, 1,
-         1, 2,
-         2, 3,
-         3, 0,
-
-         1, 5,
-         5, 6,
-         6, 2,
-         2, 1,
-
-         7, 6,
-         6, 5,
-         5, 4,
-         4, 7,
-
-         4, 0,
-         0, 3,
-         3, 7,
-         7, 4,
-
-         4, 5,
-         5, 1,
-         1, 0,
-         0, 4,
-
-         3, 2,
-         2, 6,
-         6, 7,
-         7, 3
-      };
-      glBindVertexArray(m_VAO);
-      glBindBuffer(GL_ARRAY_BUFFER, m_VBOS[0]);
-      glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBOS[0]);
-      glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-      glVertexAttribPointer(0, 3, GL_INT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-      glEnableVertexAttribArray(0);
-
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      glBindVertexArray(0);
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-   }
-
-   static void inline Initialize()
-   {
-      if (m_initialized) return;
-      glGenVertexArrays(1, &m_VAO);
-      glGenBuffers(m_numBuffers, m_VBOS.data());
-      glGenBuffers(m_numBuffers, m_EBOS.data());
-
-      assert(m_numBuffers == m_VBOS.size() && m_numBuffers == m_EBOS.size());
-
-      T::_init();
-      m_initialized = true;
-   }
-
-   static void inline Destroy()
-   {
-      assert(m_numBuffers == m_VBOS.size() && m_numBuffers == m_EBOS.size());
-      assert(m_initialized);
-
-      glDeleteVertexArrays(1, &m_VAO);
-      glDeleteBuffers(m_numBuffers, m_VBOS.data());
-      glDeleteBuffers(m_numBuffers, m_EBOS.data());
-
-      T::_destroy();
-      m_initialized = false;
-   }
-
-   void inline Render(Camera& cam, ShaderProgram& shaders)
-   {
-      // First render the scene box
-      GLint size;
-
-      glUseProgram(shaders.ID);
-      glBindVertexArray(m_VAO);
-      glBindBuffer(GL_ARRAY_BUFFER, m_VBOS[0]);
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBOS[0]);
-      glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-
-      auto model = glm::translate(glm::mat4(1.f), m_pos);
-      auto view = glm::lookAt(cam.Position(), cam.Position() + cam.Looking(), glm::vec3(0.f, 1.f, 0.f));
-      auto projection = glm::perspective(glm::radians(45.f), 1.f * 1200 / 720, 0.1f, 160.f);
-      auto mvp = projection * view * model;
-      glUniformMatrix4fv(shaders.GetUniform("m_transform"), 1, GL_FALSE, glm::value_ptr(mvp));
-
-      glVertexAttribPointer(0, 3, GL_INT, GL_FALSE, 0, (GLvoid*)0);
-      glDrawElements(GL_LINES, size / sizeof(GLuint), GL_UNSIGNED_INT, 0);
-
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      glBindVertexArray(0);
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-      static_cast<T*>(this)->_render(cam, shaders);
-   }
-
-   static GLsizei inline GenBindFromBlender(const char* inBlenderFilename)
-   {
-      AddBufferObj();
-      GLsizei ID = static_cast<GLsizei>(m_VBOS.size());
-      ReBindFromBlender(ID, inBlenderFilename);
-      return ID;
-   }
-
-   static void inline ReBindFromBlender(GLsizei inID, const char* inBlenderFilename)
-   {
-      GLsizei in = inID - GLsizei(1);
-      assert(in >= GLsizei(1) && in < m_numBuffers);
-
       std::vector<GLfloat> vertices;
       std::vector<GLfloat> uvs;
       std::vector<GLfloat> normals;
       std::vector<GLuint> vertIndices, uvIndices, normalIndices;
 
       std::ifstream infile;
-      infile.open(inBlenderFilename, std::ios::in);
+   infile.open(fileName, std::ios::in);
 
       if (!infile.is_open())
       {
@@ -402,35 +237,173 @@ public:
       }
       infile.close();
 
+   outVertices = vertices;
+   outIndices = vertIndices;
+}
 
-      glBindVertexArray(m_VAO);
-      glBindBuffer(GL_ARRAY_BUFFER, m_VBOS[in]);
-      glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+template <class T>
+class Object
+{
+private:
 
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBOS[in]);
-      glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertIndices.size() * sizeof(GLuint), vertIndices.data(), GL_STATIC_DRAW);
+   static bool m_initialized;
 
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-      glEnableVertexAttribArray(0);
+protected:
 
-      glBindBuffer(GL_ARRAY_BUFFER, 0);
-      glBindVertexArray(0);
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+   static GLuint m_VBO;
+   static GLuint m_EBO;
+
+   static std::vector<GLfloat> vertices;
+   static std::vector<GLuint> indices;
+
+   glm::vec3 m_pos = glm::vec3(0.f);
+
+public:
+
+   static inline void Initialize()
+   {
+      if (m_initialized)
+      {
+         return;
+      }
+
+      T::_init();
+
+      m_initialized = true;
+   }
+
+   static inline void Destroy()
+   {
+      if (!m_initialized)
+      {
+         return;
+      }
+
+      T::_destroy();
+
+      m_initialized = false;
+   }
+
+   static inline GLuint VBO()
+   {
+      return m_VBO;
+   }
+
+   static inline GLuint EBO()
+   {
+      return m_EBO;
+   }
+
+   static inline void DeclareAttribPointers()
+   {
+      if (!m_initialized)
+      {
+         return;
+      }
+
+      T::_declare_attrib_pointers();
+   }
+
+   static inline void Draw()
+   {
+      if (!m_initialized)
+      {
+         return;
+      }
+
+      T::_draw();
+   }
+
+   inline void Render(ShaderProgram& prog, glm::mat4 projection, glm::mat4 view)
+   {
+      glUseProgram(prog.ID);
+      glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+
+      auto model = Model();
+      auto mvp = projection * view * model;
+      glUniformMatrix4fv(prog.GetUniform("m_transform"), 1, GL_FALSE, glm::value_ptr(mvp));
+
+      DeclareAttribPointers();
+      Draw();
+   }
+
+   virtual inline glm::mat4 Model()
+   {
+      return glm::translate(glm::mat4(1.f), m_pos);
    }
 };
 
 template <class T>
-GLuint Scene<T>::m_VAO = 0;
+bool Object<T>::m_initialized = false;
 
 template <class T>
-GLsizei Scene<T>::m_numBuffers = 1;
+GLuint Object<T>::m_VBO = 0;
 
 template <class T>
-std::vector<GLuint> Scene<T>::m_VBOS = std::vector<GLuint>(m_numBuffers);
+GLuint Object<T>::m_EBO = 0;
 
 template <class T>
-std::vector<GLuint> Scene<T>::m_EBOS = std::vector<GLuint>(m_numBuffers);
+std::vector<GLfloat> Object<T>::vertices = std::vector<GLfloat>();
+
+template <class T>
+std::vector<GLuint> Object<T>::indices = std::vector<GLuint>();
+
+// ====================================================================================================================
+
+template <class T>
+class Scene
+{
+private:
+
+   static bool m_initialized;
+   static GLuint m_VAO;
+
+protected:
+
+
+
+public:
+
+   static inline void Initialize()
+   {
+      if (m_initialized)
+      {
+         return;
+      }
+
+      T::_init();
+
+      m_initialized = true;
+   }
+
+   static inline void Destroy()
+   {
+      if (!m_initialized)
+      {
+         return;
+      }
+
+      T::_destroy();
+
+      m_initialized = false;
+   }
+
+   static inline void Render()
+   {
+      if (!m_initialized)
+      {
+         return;
+      }
+
+      T::_render();
+   }
+
+};
 
 template <class T>
 bool Scene<T>::m_initialized = false;
-*/
+
+template <class T>
+GLuint Scene<T>::m_VAO = 0;
+// ====================================================================================================================

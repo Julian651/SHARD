@@ -1,9 +1,2 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
-
-/VS_PROJ/SHARD_APP/.vs/SHARD_APP
-/VS_PROJ/SHARD_APP/x64/Debug/SHARD_APP.tlog
-/VS_PROJ/SHARD_APP/x64/Debug
-/.vs
-/VS_PROJ/SHARD_APP/Debug
+﻿/.vs/WxOpenGL
+/x64/Debug
