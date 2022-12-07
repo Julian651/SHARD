@@ -1,2 +1,5 @@
-﻿/.vs/WxOpenGL
-/x64/Debug
+﻿/x64
+/.vs
+SHARD.sln
+SHARD.vcxproj
+SHARD.vcxproj.user

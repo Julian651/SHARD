@@ -1,6 +1,10 @@
 #pragma once
 
+#include <RenderUtilities.h>
+#include <Objects.h>
+
 #include <wx/app.h>
+#include <wx/menu.h>
 #include <wx/frame.h>
 #include <wx/glcanvas.h>
 
