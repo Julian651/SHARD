@@ -18,7 +18,20 @@ private:
 
    friend Scene;
 
-   std::vector<Hexagon> hexes;
+   struct HexaNode
+   {
+      Hexagon hexa;
+      HexaNode* front = nullptr;
+      HexaNode* back = nullptr;
+      HexaNode* bleft = nullptr;
+      HexaNode* fleft = nullptr;
+      HexaNode* bright = nullptr;
+      HexaNode* fright = nullptr;
+      HexaNode* top = nullptr;
+      HexaNode* bottom = nullptr;
+   };
+
+   std::vector<HexaNode*> hexes;
    Line l;
 
    static void _init();
@@ -29,4 +42,5 @@ public:
 
    void AddHexagon(glm::vec3 pos);
    void CheckIntersections(glm::vec3 camPos, glm::vec3 ray);
+   ~HexaScene();
 };
