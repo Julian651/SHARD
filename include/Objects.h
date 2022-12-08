@@ -38,7 +38,7 @@ private:
 
 public:
 
-   Cube(int size);
+   Cube(glm::vec3 pos, int size);
 };
 
 class Line : public Object<Line>

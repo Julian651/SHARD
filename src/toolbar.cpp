@@ -1,17 +1,15 @@
-#include "toolbar.h"
-#include <shard.h>
 #include <wx/artprov.h>
+
+#include <toolbar.h>
+#include <enums.h>
+
 Toolbar::Toolbar(wxWindow * parent)
     : wxToolBar(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, 4L | wxBORDER_NONE) {
 
     wxImage::AddHandler(new wxPNGHandler);
 
-   
- 
-   
-
     this->AddTool(wxID_EXIT, wxT("Quit"), wxArtProvider::GetBitmap("wxART_QUIT"));
-    this->AddTool(shardMENU_NEW, wxT("New"), wxArtProvider::GetBitmap("wxART_NEW"));
+    this->AddTool(sMENU_NEW, wxT("New"), wxArtProvider::GetBitmap("wxART_NEW"));
     this->AddTool(wxID_ANY, wxT("Open"), wxArtProvider::GetBitmap("wxART_FILE_OPEN"));
     this->AddTool(wxID_ANY, wxT("Save"), wxArtProvider::GetBitmap("wxART_FILE_SAVE"));
     this->AddTool(wxID_ANY, wxT("Save As"), wxArtProvider::GetBitmap("wxART_FILE_SAVE_AS"));
@@ -23,7 +21,7 @@ Toolbar::Toolbar(wxWindow * parent)
     this->AddTool(wxID_ANY, wxT("Zoom Out"), wxArtProvider::GetBitmap("wxART_MINUS"));
     this->AddTool(wxID_ANY, wxT("Add Tile"), wxArtProvider::GetBitmap("wxART_ADD_BOOKMARK"));
     this->AddTool(wxID_ANY, wxT("Delete Tile"), wxArtProvider::GetBitmap("wxART_DEL_BOOKMARK"));
-    
+
 
     this->Realize();
 }

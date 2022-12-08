@@ -19,15 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Canvas.cpp" />
     <ClCompile Include="src\Objects.cpp" />
     <ClCompile Include="src\sApp.cpp" />
+    <ClCompile Include="src\Scenes.cpp" />
     <ClCompile Include="src\toolbar.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Canvas.h" />
     <ClInclude Include="include\Objects.h" />
     <ClInclude Include="include\RenderUtilities.h" />
     <ClInclude Include="include\sApp.h" />
-    <ClInclude Include="include\shard.h" />
+    <ClInclude Include="include\enums.h" />
+    <ClInclude Include="include\Scenes.h" />
     <ClInclude Include="include\toolbar.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

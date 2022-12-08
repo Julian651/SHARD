@@ -98,9 +98,9 @@ glm::mat4 Hexagon::Model()
 
 // ======================================= CUBE OBJECT ============================================
 
-Cube::Cube(int size) : m_size(size)
+Cube::Cube(glm::vec3 pos, int size) : m_size(size)
 {
-
+   m_pos = pos;
 }
 
 void Cube::_init()

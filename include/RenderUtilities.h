@@ -1,9 +1,15 @@
 #pragma once
 
+#ifdef GL_VERSION_1_1
+#undef GL_VERSION_1_1
+#endif
+
 #include <GL/gl3w.h>
+
 #include <glm/vec3.hpp>
 #include <glm/ext/matrix_double4x4.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 #include <vector>
 #include <fstream>
 
@@ -328,6 +334,11 @@ public:
       Draw();
    }
 
+   inline glm::vec3 Position()
+   {
+      return m_pos;
+   }
+
    virtual inline glm::mat4 Model()
    {
       return glm::translate(glm::mat4(1.f), m_pos);
@@ -357,11 +368,10 @@ class Scene
 private:
 
    static bool m_initialized;
-   static GLuint m_VAO;
 
 protected:
 
-
+   static GLuint m_VAO;
 
 public:
 
@@ -389,14 +399,19 @@ public:
       m_initialized = false;
    }
 
-   static inline void Render()
+   inline void Render(ShaderProgram& program, glm::mat4 projection, glm::mat4 view)
    {
       if (!m_initialized)
       {
          return;
       }
 
-      T::_render();
+      static_cast<T*>(this)->_render(program, projection, view);
+   }
+
+   static inline GLuint VAO()
+   {
+      return m_VAO;
    }
 
 };
