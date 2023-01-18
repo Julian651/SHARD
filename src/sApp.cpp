@@ -132,7 +132,7 @@ void sMenuBar::Set(eMode mode)
 
 wxIMPLEMENT_APP(sApp);
 
-sFrame::sFrame() : wxFrame(nullptr, wxID_ANY, _("OpenGL wxtest"), wxPoint(300, 300), wxSize(1200, 720))
+sFrame::sFrame() : wxFrame(nullptr, wxID_ANY, _("OpenGL wxtest"), wxPoint(300, 150), wxSize(1200, 720))
 {
    m_menuBar = new sMenuBar;
 
