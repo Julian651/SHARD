@@ -219,7 +219,7 @@ wxBEGIN_EVENT_TABLE(sNotebook, wxNotebook)
 EVT_KEY_DOWN(sNotebook::OnKeyboard)
 wxEND_EVENT_TABLE()
 
-sNotebook::sNotebook(wxWindow* parent) : wxNotebook(parent, wxID_ANY)
+sNotebook::sNotebook(wxWindow* parent) : wxNotebook(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS)
 {
 }
 

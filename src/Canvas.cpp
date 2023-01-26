@@ -37,7 +37,7 @@ void sGLCanvas::DestroyContext()
    }
 }
 
-sGLCanvas::sGLCanvas(wxWindow* parent, wxGLAttributes& canvasAttribs) : wxGLCanvas(parent, canvasAttribs)
+sGLCanvas::sGLCanvas(wxWindow* parent, wxGLAttributes& canvasAttribs) : wxGLCanvas(parent, canvasAttribs, -1, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS | wxFULL_REPAINT_ON_RESIZE)
 {
    if (!m_initialized)
    {
@@ -77,7 +77,7 @@ sModelEditor::sModelEditor(wxWindow* parent, wxGLAttributes& canvasAttribs) : sG
    m_program->Attach(compileShader("resources\\myshader.vert", eShaderType::VERTEX), compileShader("resources\\myfragment.frag", eShaderType::FRAGMENT));
    m_program->Link();
 
-   cam.Move(glm::vec3(0.f, 0.f, 100.f));
+   cam.Move(glm::vec3(0.f, 0.f, 3.f));
    m_view = glm::lookAt(cam.Position(), cam.Position() + cam.Looking(), glm::vec3(0.f, 1.f, 0.f));
 
    m_projection = glm::mat4(0.f);
@@ -182,6 +182,25 @@ void sModelEditor::OnKeyboard(wxKeyEvent& event)
       ref = true;
       break;
    }
+   case WXK_NUMPAD_ENTER:
+   case WXK_RETURN:
+   {
+      if (confirmTemp)
+      {
+         h->ConfirmTemp();
+         confirmTemp = false;
+      }
+      break;
+   }
+   case WXK_ESCAPE:
+   {
+      if (confirmTemp)
+      {
+         h->CancelTemp();
+         confirmTemp = false;
+      }
+      break;
+   }
    }
 
    Refresh(ref);
@@ -267,7 +286,10 @@ void sModelEditor::OnLMouseClick(wxMouseEvent& event)
 
    l->Move(cam.Position(), ray_wor, 300.f);
 
-   h->CheckIntersections(cam.Position(), ray_wor);
+   if (!confirmTemp && h->CheckIntersections(cam.Position(), ray_wor))
+   {
+      confirmTemp = true;
+   }
 
    Refresh(true);
 }

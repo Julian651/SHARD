@@ -33,6 +33,7 @@ private:
 
    std::vector<HexaNode*> hexes;
    Line l;
+   HexaNode* tempNode = nullptr;
 
    static void _init();
    void _render(ShaderProgram& program, glm::mat4 projection, glm::mat4 view);
@@ -41,6 +42,8 @@ private:
 public:
 
    void AddHexagon(glm::vec3 pos);
-   void CheckIntersections(glm::vec3 camPos, glm::vec3 ray);
+   bool CheckIntersections(glm::vec3 camPos, glm::vec3 ray);
+   void ConfirmTemp();
+   void CancelTemp();
    ~HexaScene();
 };

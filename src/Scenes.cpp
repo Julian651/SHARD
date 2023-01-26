@@ -22,6 +22,10 @@ void HexaScene::_render(ShaderProgram& program, glm::mat4 projection, glm::mat4 
    {
       hex->hexa.Render(program, projection, view);
    }
+   if (tempNode)
+   {
+      tempNode->hexa.Render(program, projection, view);
+   }
    l.Render(program, projection, view);
 }
 
@@ -40,8 +44,9 @@ void HexaScene::AddHexagon(glm::vec3 pos)
    hexes.push_back(hex);
 }
 
-void HexaScene::CheckIntersections(glm::vec3 camPos, glm::vec3 ray)
+bool HexaScene::CheckIntersections(glm::vec3 camPos, glm::vec3 ray)
 {
+   if (tempNode) return false;
    for (auto& hex : hexes)
    {
       glm::vec3 pos = hex->hexa.Position();
@@ -87,74 +92,69 @@ void HexaScene::CheckIntersections(glm::vec3 camPos, glm::vec3 ray)
                {
                   // back
                   fprintf(stderr, "4\n");
-                  HexaNode* nnode = new HexaNode{ Hexagon(glm::vec3(pos.x, pos.y, pos.z - hexa_z * 2)) };
+                  tempNode = new HexaNode{ Hexagon(glm::vec3(pos.x, pos.y, pos.z - hexa_z * 2)) };
 
-                  hex->back = nnode;
-                  nnode->front = hex;
-                  nnode->fright = hex->bright;
-                  nnode->fleft = hex->bleft;
-                  if (nnode->fright)
+                  hex->back = tempNode;
+                  tempNode->front = hex;
+                  tempNode->fright = hex->bright;
+                  tempNode->fleft = hex->bleft;
+                  if (tempNode->fright)
                   {
-                     nnode->bright = nnode->fright->back;
-                     nnode->fright->bleft = nnode;
+                     tempNode->bright = tempNode->fright->back;
+                     tempNode->fright->bleft = tempNode;
                   }
-                  if (nnode->fleft)
+                  if (tempNode->fleft)
                   {
-                     nnode->bleft = nnode->fleft->back;
-                     nnode->fleft->bright = nnode;
+                     tempNode->bleft = tempNode->fleft->back;
+                     tempNode->fleft->bright = tempNode;
                   }
-                  if (nnode->bright)
+                  if (tempNode->bright)
                   {
-                     nnode->back = nnode->bright->bleft;
-                     nnode->bright->fleft = nnode;
+                     tempNode->back = tempNode->bright->bleft;
+                     tempNode->bright->fleft = tempNode;
                   }
-                  if (nnode->bleft)
+                  if (tempNode->bleft)
                   {
-                     nnode->bleft->fright = nnode;
+                     tempNode->bleft->fright = tempNode;
                   }
-                  if (nnode->back)
+                  if (tempNode->back)
                   {
-                     nnode->back->front = nnode;
+                     tempNode->back->front = tempNode;
                   }
-
-
-                  hexes.push_back(nnode);
                }
                else if (point.z > pos.z && !hex->front)
                {
                   // front
                   fprintf(stderr, "1\n");
-                  HexaNode* nnode = new HexaNode{ Hexagon(glm::vec3(pos.x, pos.y, pos.z + hexa_z * 2)) };
+                  tempNode = new HexaNode{ Hexagon(glm::vec3(pos.x, pos.y, pos.z + hexa_z * 2)) };
 
-                  hex->front = nnode;
-                  nnode->back = hex;
-                  nnode->bright = hex->fright;
-                  nnode->bleft = hex->fleft;
-                  if (nnode->bright)
+                  hex->front = tempNode;
+                  tempNode->back = hex;
+                  tempNode->bright = hex->fright;
+                  tempNode->bleft = hex->fleft;
+                  if (tempNode->bright)
                   {
-                     nnode->fright = nnode->bright->front;
-                     nnode->bright->fleft = nnode;
+                     tempNode->fright = tempNode->bright->front;
+                     tempNode->bright->fleft = tempNode;
                   }
-                  if (nnode->bleft)
+                  if (tempNode->bleft)
                   {
-                     nnode->fleft = nnode->bleft->front;
-                     nnode->bleft->fright = nnode;
+                     tempNode->fleft = tempNode->bleft->front;
+                     tempNode->bleft->fright = tempNode;
                   }
-                  if (nnode->fright)
+                  if (tempNode->fright)
                   {
-                     nnode->front = nnode->fright->fleft;
-                     nnode->fright->bleft = nnode;
+                     tempNode->front = tempNode->fright->fleft;
+                     tempNode->fright->bleft = tempNode;
                   }
-                  if (nnode->fleft)
+                  if (tempNode->fleft)
                   {
-                     nnode->fleft->bright = nnode;
+                     tempNode->fleft->bright = tempNode;
                   }
-                  if (nnode->front)
+                  if (tempNode->front)
                   {
-                     nnode->front->back = nnode;
+                     tempNode->front->back = tempNode;
                   }
-
-                  hexes.push_back(nnode);
                }
                
             }
@@ -164,73 +164,69 @@ void HexaScene::CheckIntersections(glm::vec3 camPos, glm::vec3 ray)
                {
                   // back left
                   fprintf(stderr, "5\n");
-                  HexaNode* nnode = new HexaNode{ Hexagon(glm::vec3(pos.x - hexa_x - hexa_x / 2.f, pos.y, pos.z - hexa_z)) };
+                  tempNode = new HexaNode{ Hexagon(glm::vec3(pos.x - hexa_x - hexa_x / 2.f, pos.y, pos.z - hexa_z)) };
 
-                  hex->bleft = nnode;
-                  nnode->fright = hex;
-                  nnode->front = hex->fleft;
-                  nnode->bright = hex->back;
-                  if (nnode->bright)
+                  hex->bleft = tempNode;
+                  tempNode->fright = hex;
+                  tempNode->front = hex->fleft;
+                  tempNode->bright = hex->back;
+                  if (tempNode->bright)
                   {
-                     nnode->back = nnode->bright->bleft;
-                     nnode->bright->fleft = nnode;
+                     tempNode->back = tempNode->bright->bleft;
+                     tempNode->bright->fleft = tempNode;
                   }
-                  if (nnode->front)
+                  if (tempNode->front)
                   {
-                     nnode->fleft = nnode->front->bleft;
-                     nnode->front->back = nnode;
+                     tempNode->fleft = tempNode->front->bleft;
+                     tempNode->front->back = tempNode;
                   }
-                  if (nnode->back)
+                  if (tempNode->back)
                   {
-                     nnode->bleft = nnode->back->fleft;
-                     nnode->back->front = nnode;
+                     tempNode->bleft = tempNode->back->fleft;
+                     tempNode->back->front = tempNode;
                   }
-                  if (nnode->bleft)
+                  if (tempNode->bleft)
                   {
-                     nnode->bleft->fright = nnode;
+                     tempNode->bleft->fright = tempNode;
                   }
-                  if (nnode->fleft)
+                  if (tempNode->fleft)
                   {
-                     nnode->fleft->bright = nnode;
+                     tempNode->fleft->bright = tempNode;
                   }
-
-                  hexes.push_back(nnode);
                }
                else if (point.z > pos.z && !hex->fleft)
                {
                   // front left
                   fprintf(stderr, "6\n");
-                  HexaNode* nnode = new HexaNode{ Hexagon(glm::vec3(pos.x - hexa_x - hexa_x / 2.f, pos.y, pos.z + hexa_z)) };
+                  tempNode = new HexaNode{ Hexagon(glm::vec3(pos.x - hexa_x - hexa_x / 2.f, pos.y, pos.z + hexa_z)) };
 
-                  hex->fleft = nnode;
-                  nnode->bright = hex;
-                  nnode->back = hex->bleft;
-                  nnode->fright = hex->front;
-                  if (nnode->fright)
+                  hex->fleft = tempNode;
+                  tempNode->bright = hex;
+                  tempNode->back = hex->bleft;
+                  tempNode->fright = hex->front;
+                  if (tempNode->fright)
                   {
-                     nnode->front = nnode->fright->fleft;
-                     nnode->fright->bleft = nnode;
+                     tempNode->front = tempNode->fright->fleft;
+                     tempNode->fright->bleft = tempNode;
                   }
-                  if (nnode->back)
+                  if (tempNode->back)
                   {
-                     nnode->bleft = nnode->back->fleft;
-                     nnode->back->front = nnode;
+                     tempNode->bleft = tempNode->back->fleft;
+                     tempNode->back->front = tempNode;
                   }
-                  if (nnode->front)
+                  if (tempNode->front)
                   {
-                     nnode->fleft = nnode->front->bleft;
-                     nnode->front->back = nnode;
+                     tempNode->fleft = tempNode->front->bleft;
+                     tempNode->front->back = tempNode;
                   }
-                  if (nnode->bleft)
+                  if (tempNode->bleft)
                   {
-                     nnode->bleft->fright = nnode;
+                     tempNode->bleft->fright = tempNode;
                   }
-                  if (nnode->fleft)
+                  if (tempNode->fleft)
                   {
-                     nnode->fleft->bright = nnode;
+                     tempNode->fleft->bright = tempNode;
                   }
-
-                  hexes.push_back(nnode);
                }
             }
             else
@@ -239,73 +235,69 @@ void HexaScene::CheckIntersections(glm::vec3 camPos, glm::vec3 ray)
                {
                   // back right
                   fprintf(stderr, "3\n");
-                  HexaNode* nnode = new HexaNode{ Hexagon(glm::vec3(pos.x + hexa_x + hexa_x / 2.f, pos.y, pos.z - hexa_z)) };
+                  tempNode = new HexaNode{ Hexagon(glm::vec3(pos.x + hexa_x + hexa_x / 2.f, pos.y, pos.z - hexa_z)) };
 
-                  hex->bright = nnode;
-                  nnode->fleft = hex;
-                  nnode->front = hex->fright;
-                  nnode->bleft = hex->front;
-                  if (nnode->bleft)
+                  hex->bright = tempNode;
+                  tempNode->fleft = hex;
+                  tempNode->front = hex->fright;
+                  tempNode->bleft = hex->front;
+                  if (tempNode->bleft)
                   {
-                     nnode->back = nnode->bleft->bright;
-                     nnode->bleft->fright = nnode;
+                     tempNode->back = tempNode->bleft->bright;
+                     tempNode->bleft->fright = tempNode;
                   }
-                  if (nnode->front)
+                  if (tempNode->front)
                   {
-                     nnode->fright = nnode->front->bright;
-                     nnode->front->back = nnode;
+                     tempNode->fright = tempNode->front->bright;
+                     tempNode->front->back = tempNode;
                   }
-                  if (nnode->back)
+                  if (tempNode->back)
                   {
-                     nnode->bright = nnode->back->fright;
-                     nnode->back->front = nnode;
+                     tempNode->bright = tempNode->back->fright;
+                     tempNode->back->front = tempNode;
                   }
-                  if (nnode->fright)
+                  if (tempNode->fright)
                   {
-                     nnode->fright->bleft = nnode;
+                     tempNode->fright->bleft = tempNode;
                   }
-                  if (nnode->bright)
+                  if (tempNode->bright)
                   {
-                     nnode->bright->fleft = nnode;
+                     tempNode->bright->fleft = tempNode;
                   }
-
-                  hexes.push_back(nnode);
                }
                else if (point.z > pos.z && !hex->fright)
                {
                   // front right
                   fprintf(stderr, "2\n");
-                  HexaNode* nnode = new HexaNode{ Hexagon(glm::vec3(pos.x + hexa_x + hexa_x / 2.f, pos.y, pos.z + hexa_z)) };
+                  tempNode = new HexaNode{ Hexagon(glm::vec3(pos.x + hexa_x + hexa_x / 2.f, pos.y, pos.z + hexa_z)) };
 
-                  hex->fright = nnode;
-                  nnode->bleft = hex;
-                  nnode->back = hex->bright;
-                  nnode->fleft = hex->front;
-                  if (nnode->fleft)
+                  hex->fright = tempNode;
+                  tempNode->bleft = hex;
+                  tempNode->back = hex->bright;
+                  tempNode->fleft = hex->front;
+                  if (tempNode->fleft)
                   {
-                     nnode->front = nnode->fleft->fright;
-                     nnode->fleft->bright = nnode;
+                     tempNode->front = tempNode->fleft->fright;
+                     tempNode->fleft->bright = tempNode;
                   }
-                  if (nnode->back)
+                  if (tempNode->back)
                   {
-                     nnode->bright = nnode->back->fright;
-                     nnode->back->front = nnode;
+                     tempNode->bright = tempNode->back->fright;
+                     tempNode->back->front = tempNode;
                   }
-                  if (nnode->front)
+                  if (tempNode->front)
                   {
-                     nnode->fright = nnode->front->bright;
-                     nnode->front->back = nnode;
+                     tempNode->fright = tempNode->front->bright;
+                     tempNode->front->back = tempNode;
                   }
-                  if (nnode->bright)
+                  if (tempNode->bright)
                   {
-                     nnode->bright->fleft = nnode;
+                     tempNode->bright->fleft = tempNode;
                   }
-                  if (nnode->fright)
+                  if (tempNode->fright)
                   {
-                     nnode->fright->bleft = nnode;
+                     tempNode->fright->bleft = tempNode;
                   }
-
-                  hexes.push_back(nnode);
                }
             }
 
@@ -321,42 +313,35 @@ void HexaScene::CheckIntersections(glm::vec3 camPos, glm::vec3 ray)
                fprintf(stderr, "adj: %d\n", count);
             }
             fprintf(stderr, "size: %zd\n", hexes.size());
-            if (hexes.size() != size) return;
-            else break;
+            if (hexes.size() != size) return false;
+            else return true;
          }
       }
-
-
-      /*// get one closes to the camera in the z direction
-      glm::vec3 pos = hex.Position();
-      glm::vec3 d = camPos - pos;
-      GLfloat len = sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
-
-      for (float i = 0.f; i <= len; i += 0.01f)
-      {
-         glm::vec3 point = glm::vec3((camPos.x + ray.x * i), (camPos.y + ray.y * i), (camPos.z + ray.z * i));
-         float xbound = fabsf(point.x - pos.x);
-         float ybound = fabsf(point.y - pos.y);
-         float zbound = fabsf(point.z - pos.z);
-         if (xbound <= 1.f && ybound <= 0.38f && zbound <= 0.866f)
-         {
-            fprintf(stderr, "within box\n");
-
-            if (xbound <= 0.5f)
-            {
-               fprintf(stderr, "within hex\n");
-               l.Move(camPos + glm::vec3(0.f, 0.f, -0.01f), ray, i);
-               break;
-            }
-            else
-            {
-
-            }
-
-            fprintf(stderr, "\n");
-         }
-      }*/
    }
+   return false;
+}
+
+void HexaScene::ConfirmTemp()
+{
+   if (tempNode)
+   {
+      fprintf(stderr, "confirmed selcetion");
+      hexes.push_back(tempNode);
+      tempNode = nullptr;
+   }
+}
+
+void HexaScene::CancelTemp()
+{
+   if (!tempNode) return; // sloppy, but i dont know why tempNode is sometimes 0x00000000 (null) when being canceled (it should be a value)
+   if (tempNode->back && tempNode->back->front == tempNode) { tempNode->back->front = nullptr;  }
+   if (tempNode->front && tempNode->front->back == tempNode) { tempNode->front->back = nullptr; }
+   if (tempNode->bleft && tempNode->bleft->fright == tempNode) { tempNode->bleft->fright = nullptr; }
+   if (tempNode->bright && tempNode->bright->fleft == tempNode) { tempNode->bright->fleft = nullptr; }
+   if (tempNode->fleft && tempNode->fleft->bright == tempNode) { tempNode->fleft->bright = nullptr; }
+   if (tempNode->fright && tempNode->fright->bleft == tempNode) { tempNode->fright->bleft = nullptr; }
+   delete tempNode;
+   tempNode = nullptr;
 }
 
 HexaScene::~HexaScene()
@@ -364,5 +349,11 @@ HexaScene::~HexaScene()
    for (auto& hex : hexes)
    {
       delete hex;
+      hex = nullptr;
+   }
+   if (tempNode)
+   {
+      delete tempNode;
+      tempNode = nullptr;
    }
 }

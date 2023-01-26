@@ -40,6 +40,7 @@ class sModelEditor : public sGLCanvas
 private:
 
    bool firstMouse = true;
+   bool confirmTemp = false;
    int lastX = -1;
    int lastY = -1;
 
