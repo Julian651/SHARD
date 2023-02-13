@@ -57,6 +57,10 @@ public:
    sMenuBar(eMode mode = eMode::DEFAULT);
    ~sMenuBar();
 
+   /// <summary>
+   /// Set the mode of the menu to correspond to the application state (e.g. physical mode, simulation mode, etc.)
+   /// </summary>
+   /// <param name="mode mode to set the menu state"></param>
    void Set(eMode mode);
 };
 

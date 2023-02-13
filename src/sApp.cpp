@@ -22,12 +22,14 @@ bool sApp::OnInit()
 
 sMenuBar::sMenuBar(eMode mode) : wxMenuBar(wxBORDER_NONE)
 {
+   // Different menus that may or may not be present on the menu bar given the state the application is in
    m_menuFile = new wxMenu;
    m_menuEdit = new wxMenu;
    m_menuView = new wxMenu;
    m_menuSettings = new wxMenu;
    m_menuHelp = new wxMenu;
 
+   // Append and add some menu items
    m_menuFile->Append(sMENU_NEW);
    m_menuFile->Append(sMENU_OPEN);
    m_itemSave     = new wxMenuItem(m_menuFile, sMENU_SAVE);
@@ -65,7 +67,8 @@ sMenuBar::sMenuBar(eMode mode) : wxMenuBar(wxBORDER_NONE)
 
 sMenuBar::~sMenuBar()
 {
-   Set(eMode::SIMULATION); // set mode to mode where all menus are being used for automatic deletion via wxwidgets
+   // set mode to mode where all menus are being used for automatic deletion via wxwidgets
+   Set(eMode::SIMULATION);
 }
 
 void sMenuBar::Set(eMode mode)
@@ -134,24 +137,32 @@ wxIMPLEMENT_APP(sApp);
 
 sFrame::sFrame() : wxFrame(nullptr, wxID_ANY, _("OpenGL wxtest"), wxPoint(300, 150), wxSize(1200, 720))
 {
+   // Create menu bar
    m_menuBar = new sMenuBar;
 
+   // Create toolbar
    auto toolBar = new Toolbar(this);
 
+   // Create panel which the notebook will be placed in
    wxPanel* panel = new wxPanel(this);
 
+   // Created the notebook, which is tabbed panels like in any text editor
    m_tabbedPanes = new sNotebook(panel);
 
+   // Generate the initial window of the shard model editor
    wxGLAttributes attribs;
    attribs.PlatformDefaults().Defaults().EndList();
    wxGLCanvas* canvas = new sModelEditor(m_tabbedPanes, attribs);
 
+   // Add the model editor to the tabbed panels
    m_tabbedPanes->AddPage(canvas, _("Page 1"), true);
 
+   // Create a sizer which will layout the tabbed panes to expand in the panel which it is in
    wxBoxSizer* bs = new wxBoxSizer(wxHORIZONTAL);
    bs->Add(m_tabbedPanes, wxSizerFlags(1).Expand());
    panel->SetSizer(bs);
 
+   // Create a grid sizer for the frame to put in the panel and toolbar
    wxFlexGridSizer* frameSizer = new wxFlexGridSizer(2, 1, 1, 0);
    frameSizer->AddGrowableRow(1);
    frameSizer->AddGrowableCol(0);
@@ -160,8 +171,11 @@ sFrame::sFrame() : wxFrame(nullptr, wxID_ANY, _("OpenGL wxtest"), wxPoint(300, 1
    this->SetSizer(frameSizer);
 
    this->SetMenuBar(m_menuBar);
+   // Status bar to display helpful contexts
    this->CreateStatusBar();
+   
 
+   // TO-DO: THIS IS TEMPORARY, INCORPORATE INTO MENU
    auto menuMode = new wxMenu;
    menuMode->Append(10, wxT("DEF"));
    menuMode->Append(11, wxT("SIM"));
@@ -198,13 +212,11 @@ sFrame::sFrame() : wxFrame(nullptr, wxID_ANY, _("OpenGL wxtest"), wxPoint(300, 1
          break;
          }
       });
-
-   HexaScene::Initialize();
 }
 
 sFrame::~sFrame()
 {
-   HexaScene::Destroy();
+   // Destroy the initial context that was created when we first created the first model editor
    sGLCanvas::DestroyContext();
 }
 

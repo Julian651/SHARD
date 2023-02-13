@@ -19,27 +19,25 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Canvas.cpp" />
-    <ClCompile Include="src\Objects.cpp" />
-    <ClCompile Include="src\sApp.cpp" />
-    <ClCompile Include="src\Scenes.cpp" />
-    <ClCompile Include="src\toolbar.cpp" />
+    <ClInclude Include="include\Canvas.h" />
+    <ClInclude Include="include\enums.h" />
+    <ClInclude Include="include\GLLayer.h" />
+    <ClInclude Include="include\sApp.h" />
+    <ClInclude Include="include\toolbar.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Canvas.h" />
-    <ClInclude Include="include\Objects.h" />
-    <ClInclude Include="include\RenderUtilities.h" />
-    <ClInclude Include="include\sApp.h" />
-    <ClInclude Include="include\enums.h" />
-    <ClInclude Include="include\Scenes.h" />
-    <ClInclude Include="include\toolbar.h" />
+    <ClCompile Include="src\Canvas.cpp" />
+    <ClCompile Include="src\GLLayer.cpp" />
+    <ClCompile Include="src\sApp.cpp" />
+    <ClCompile Include="src\toolbar.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{17790d36-2a47-43f7-adf6-524935123ccb}</ProjectGuid>
+    <ProjectGuid>{ce0335dc-689f-4719-a978-41a6228adfe2}</ProjectGuid>
     <RootNamespace>SHARD</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>SHARD</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -90,9 +88,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>include;$(gl)\include;$(wx)\include\msvc;$(wx)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(wx)\include;$(gl)\include;$(wx)\msvc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -109,19 +107,22 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(wx)\include;$(gl)\include;$(wx)\msvc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(wx)\lib\vc_x64_lib;$(gl)\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;gl3w.lib;wxbase32ud.lib;wxmsw32ud_core.lib;wxmsw32ud_gl.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>include;$(gl)\include;$(wx)\include\msvc;$(wx)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -140,12 +141,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(wx)\include;$(gl)\include;$(wx)\msvc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(wx)\lib\vc_x64_lib;$(gl)\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;gl3w.lib;wxbase32ud.lib;wxmsw32ud_core.lib;wxmsw32ud_gl.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
