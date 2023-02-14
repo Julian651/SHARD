@@ -337,6 +337,43 @@ int HexaScene::InsertHexagon(glm::vec3 position, glm::vec3 color, int rotation, 
     return hexa_id - 1;
 }
 
+bool inBounds(glm::vec2 mouse, glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 d)
+{
+    // lines go like
+    // c__________b
+    // |          |
+    // |          |
+    // |          |
+    // |          |
+    // d__________a
+    // 
+    // y - y1 = m(x - x1)
+    // y - y1 = mx - mx1
+    // y = mx - mx1 + y1
+    // b = -mx1 + y1 = -(mx1 - y1)
+    float m;
+    float nb;
+    m = (b.y - c.y) / (b.x - c.x);
+    nb = -(m * b.x - b.y);
+    glm::vec2 lineTop(m, nb);
+    m = (a.y - d.y) / (a.x - d.x);
+    nb = -(m * a.x - a.y);
+    glm::vec2 lineBot(m, nb);
+    m = (a.x - b.x) / (a.y - b.y);
+    nb = -(m * a.y - a.x);
+    glm::vec2 lineRit(m, nb);
+    m = (c.x - d.x) / (c.y - d.y);
+    nb = -(m * c.y - c.x);
+    glm::vec2 lineLef(m, nb);
+
+    bool belowTop = mouse.y > (lineTop.x * mouse.x + lineTop.y);
+    bool aboveBot = mouse.y < (lineBot.x * mouse.x + lineBot.y);
+    bool leftRit  = mouse.x < (lineRit.x * mouse.y + lineRit.y);
+    bool rightLef = mouse.x > (lineLef.x * mouse.y + lineLef.y);
+    
+    return belowTop && aboveBot && leftRit && rightLef;
+}
+
 void HexaScene::CheckIntersections(glm::mat4 projection, glm::mat4 model, glm::vec3 camPos, int width, int height, int mouse_x, int mouse_y)
 {
     float min = -INFINITY;
@@ -346,17 +383,15 @@ void HexaScene::CheckIntersections(glm::mat4 projection, glm::mat4 model, glm::v
     for (auto& hex : hexes)
     {
         int vbo_index = hex->vbo_offset;
-
-        std::vector<glm::vec2> face_front = {
-            WorldToScreen(projection, model, m_vertices[vbo_index + 1].position, width, height),
-            WorldToScreen(projection, model, m_vertices[vbo_index + 7].position, width, height),
-            WorldToScreen(projection, model, m_vertices[vbo_index + 8].position, width, height),
-            WorldToScreen(projection, model, m_vertices[vbo_index + 2].position, width, height)
-        };
-
-        // determine if point is inside bounds of face_front
-        if (mouse_x < face_front[1].x && mouse_x > face_front[2].x &&
-            mouse_y < face_front[0].y && mouse_y > face_front[1].y)
+        glm::vec2 mouse((float)mouse_x, (float)mouse_y);
+        
+        // face_front
+        glm::vec2 a = WorldToScreen(projection, model, m_vertices[vbo_index + 1].position, width, height);
+        glm::vec2 b = WorldToScreen(projection, model, m_vertices[vbo_index + 7].position, width, height);
+        glm::vec2 c = WorldToScreen(projection, model, m_vertices[vbo_index + 8].position, width, height);
+        glm::vec2 d = WorldToScreen(projection, model, m_vertices[vbo_index + 2].position, width, height);
+        bool in_bounds = inBounds(mouse, a, b, c, d);
+        if (in_bounds)
         {
             // add to list of potential new hits
             pot_hits.push_back({
@@ -374,14 +409,13 @@ void HexaScene::CheckIntersections(glm::mat4 projection, glm::mat4 model, glm::v
             }
         }
 
-        std::vector<glm::vec2> face_front_left = {
-            WorldToScreen(projection, model, m_vertices[vbo_index + 2].position, width, height),
-            WorldToScreen(projection, model, m_vertices[vbo_index + 8].position, width, height),
-            WorldToScreen(projection, model, m_vertices[vbo_index + 9].position, width, height),
-            WorldToScreen(projection, model, m_vertices[vbo_index + 3].position, width, height)
-        };
-        if (mouse_x < face_front_left[1].x && mouse_x > face_front_left[2].x &&
-            mouse_y < face_front_left[0].y && mouse_y > face_front_left[1].y)
+        // face_front_left
+        a = WorldToScreen(projection, model, m_vertices[vbo_index + 2].position, width, height);
+        b = WorldToScreen(projection, model, m_vertices[vbo_index + 8].position, width, height);
+        c = WorldToScreen(projection, model, m_vertices[vbo_index + 9].position, width, height);
+        d = WorldToScreen(projection, model, m_vertices[vbo_index + 3].position, width, height);
+        in_bounds = inBounds(mouse, a, b, c, d);
+        if (in_bounds)
         {
             // add to list of potential new hits
             pot_hits.push_back({
@@ -399,14 +433,13 @@ void HexaScene::CheckIntersections(glm::mat4 projection, glm::mat4 model, glm::v
             }
         }
 
-        std::vector<glm::vec2> face_front_right = {
-            WorldToScreen(projection, model, m_vertices[vbo_index + 0].position, width, height),
-            WorldToScreen(projection, model, m_vertices[vbo_index + 6].position, width, height),
-            WorldToScreen(projection, model, m_vertices[vbo_index + 7].position, width, height),
-            WorldToScreen(projection, model, m_vertices[vbo_index + 1].position, width, height)
-        };
-        if (mouse_x < face_front_right[1].x && mouse_x > face_front_right[2].x &&
-            mouse_y < face_front_right[0].y && mouse_y > face_front_right[1].y)
+        // face_front_right
+        a = WorldToScreen(projection, model, m_vertices[vbo_index + 0].position, width, height);
+        b = WorldToScreen(projection, model, m_vertices[vbo_index + 6].position, width, height);
+        c = WorldToScreen(projection, model, m_vertices[vbo_index + 7].position, width, height);
+        d = WorldToScreen(projection, model, m_vertices[vbo_index + 1].position, width, height);
+        in_bounds = inBounds(mouse, a, b, c, d);
+        if (in_bounds)
         {
             // add to list of potential new hits
             pot_hits.push_back({
@@ -446,17 +479,6 @@ void HexaScene::CheckIntersections(glm::mat4 projection, glm::mat4 model, glm::v
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (const void*)offsetof(Vertex, color));
     }
-
-        /*int vbo_index = hex_min->vbo_offset;
-        m_vertices[vbo_index + 1].color = glm::vec3(0.f, 1.f, 1.f);
-        m_vertices[vbo_index + 7].color = glm::vec3(0.f, 1.f, 1.f);
-        m_vertices[vbo_index + 8].color = glm::vec3(0.f, 1.f, 1.f);
-        m_vertices[vbo_index + 2].color = glm::vec3(0.f, 1.f, 1.f);
-        glBindVertexArray(VAO());
-        
-        glBindBuffer(GL_ARRAY_BUFFER, VBO());
-        glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex), m_vertices.data(), GL_STATIC_DRAW);
-    }*/
 }
 
 /*void HexaScene::EraseHexagon(int id)
