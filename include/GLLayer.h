@@ -91,6 +91,17 @@ private:
     GLuint m_VBO_highlight;
     GLuint m_EBO_highlight;
 
+    bool temp_hex = false;
+    float temp_hex_angle = 0.f;
+    glm::vec3 temp_hex_pos;
+    Vertex m_temphex_vertices[12];
+    GLuint m_temphex_indices[36];
+    GLuint m_VAO_temphex;
+    GLuint m_VBO_temphex;
+    GLuint m_EBO_temphex;
+
+    void InsertTempHex(glm::vec3 position, glm::vec3 color);
+
 public:
 
     HexaScene();
@@ -100,6 +111,10 @@ public:
     void _render() override;
 
     int InsertHexagon(glm::vec3 position, glm::vec3 color, int rotation, float rotate);
+
+    bool RotateTempHex(bool forwardScroll, float rotate);
+
+    bool ConfirmTempHex();
 
     void CheckIntersections(glm::mat4 projection, glm::mat4 model, glm::vec3 camPos, int width, int height, int mouse_x, int mouse_y);
 };

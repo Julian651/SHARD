@@ -9,6 +9,7 @@ EVT_KEY_DOWN(OnKeyboard)
 EVT_MOTION(OnMouseMove)
 EVT_RIGHT_DOWN(OnRMouseClick)
 EVT_LEFT_DOWN(OnLMouseClick)
+EVT_MOUSEWHEEL(OnScroll)
 wxEND_EVENT_TABLE()
 
 
@@ -119,6 +120,15 @@ void sModelEditor::OnKeyboard(wxKeyEvent& event)
    bool ref = cam.OnKeyboard(event);
    m_view = glm::lookAt(cam.Position(), cam.Position() + cam.Looking(), glm::vec3(0.f, 1.f, 0.f));
 
+   switch (key)
+   {
+   case WXK_RETURN:
+   {
+       ref = scene->ConfirmTempHex() || ref;
+       break;
+   }
+   }
+
    Refresh(ref);
 }
 
@@ -164,6 +174,12 @@ void sModelEditor::OnLMouseClick(wxMouseEvent& event)
    //}
 
    Refresh(true);
+}
+
+void sModelEditor::OnScroll(wxMouseEvent& event)
+{
+    bool forwardScroll = event.GetWheelRotation() > 0 ? true : false;
+    Refresh(scene->RotateTempHex(forwardScroll, 15.f));
 }
 
 bool wxCamera::OnKeyboard(wxKeyEvent& event)

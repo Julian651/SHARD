@@ -147,6 +147,9 @@ HexaScene::HexaScene()
     glGenVertexArrays(1, &m_VAO_highlight);
     glGenBuffers(1, &m_VBO_highlight);
     glGenBuffers(1, &m_EBO_highlight);
+    glGenVertexArrays(1, &m_VAO_temphex);
+    glGenBuffers(1, &m_VBO_temphex);
+    glGenBuffers(1, &m_EBO_temphex);
 
     float sqrt3 = sqrtf(3.f);
     int hexid1 = InsertHexagon(glm::vec3(0.f, 0.f, 0.f),            glm::vec3(1.f, 1.f, 0.f), 0, 0.f);
@@ -193,13 +196,21 @@ HexaScene::~HexaScene()
     glDeleteVertexArrays(1, &m_VAO_highlight);
     glDeleteBuffers(1, &m_VBO_highlight);
     glDeleteBuffers(1, &m_EBO_highlight);
+    glDeleteVertexArrays(1, &m_VAO_temphex);
+    glDeleteBuffers(1, &m_VBO_temphex);
+    glDeleteBuffers(1, &m_EBO_temphex);
 }
 
 void HexaScene::_render()
 {
     glBindVertexArray(m_VAO_highlight);
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO_highlight);
     glDrawElements(GL_LINES, sizeof(m_hightlight_indices), GL_UNSIGNED_INT, (const void*)0);
+
+    if (temp_hex)
+    {
+        glBindVertexArray(m_VAO_temphex);
+        glDrawElements(GL_LINES, sizeof(m_temphex_indices), GL_UNSIGNED_INT, (const void*)0);
+    }
 }
 
 void rotateHexAroundSomePoint(glm::vec3 vertices[12], float angle, glm::vec3 rotationCenter, glm::vec3 axis)
@@ -215,9 +226,16 @@ void rotateHexAroundSomePoint(glm::vec3 vertices[12], float angle, glm::vec3 rot
     }
 }
 
+void rotatePointAroundSomePoint(glm::vec3& point, float angle, glm::vec3 rotationCenter, glm::vec3 axis)
+{
+    glm::mat4 translationMatrix = glm::translate(glm::identity<glm::mat4>(), -rotationCenter);
+    glm::mat4 rotationMatrix = glm::rotate(glm::identity<glm::mat4>(), glm::radians(angle), axis);
+    glm::mat4 reverseTranslationMatrix = glm::translate(glm::identity<glm::mat4>(), rotationCenter);
+    point = glm::vec3(reverseTranslationMatrix * rotationMatrix * translationMatrix * glm::vec4(point, 1.0f));
+}
+
 int HexaScene::InsertHexagon(glm::vec3 position, glm::vec3 color, int rotation, float rotate)
 {
-
     glm::vec4 dimensions = glm::vec4(1.f, 57.f / 150.f, (75.f * sqrtf(3.f)) / 150.f, 1.f);
 
     glm::vec4 pos = glm::vec4(position.x, position.y, position.z, 1.f);
@@ -254,6 +272,8 @@ int HexaScene::InsertHexagon(glm::vec3 position, glm::vec3 color, int rotation, 
         glm::vec3(w / 2.f + x, h + y, -d + z)
     };
 
+    if (rotate == 0.f) rotation = 0;
+
     switch (rotation)
     {
     case 0:
@@ -261,7 +281,11 @@ int HexaScene::InsertHexagon(glm::vec3 position, glm::vec3 color, int rotation, 
         break;
     case 1:
         // Rotate back
-        rotateHexAroundSomePoint(hexVertices, rotate, glm::vec3(x, y - h, z - d), glm::vec3(1.f, 0.f, 0.f));
+        if (rotate > 0)
+            rotateHexAroundSomePoint(hexVertices, rotate, glm::vec3(x, y - h, z - d), glm::vec3(1.f, 0.f, 0.f));
+        else if (rotate < 0)
+            rotateHexAroundSomePoint(hexVertices, rotate, glm::vec3(x, y + h, z - d), glm::vec3(1.f, 0.f, 0.f));
+        rotatePointAroundSomePoint(hexes[hexes.size()-1]->position, 30.f, glm::vec3(x, y - h, z - d), glm::vec3(1.f, 0.f, 0.f));
         break;
     case 2:
         // Rotate back left
@@ -337,6 +361,90 @@ int HexaScene::InsertHexagon(glm::vec3 position, glm::vec3 color, int rotation, 
     return hexa_id - 1;
 }
 
+bool HexaScene::RotateTempHex(bool forwardScroll, float rotate)
+{
+    if (!temp_hex) return false;
+
+    rotate *= forwardScroll ? 1.f : -1.f;
+    if (temp_hex_angle >= 360.f || temp_hex_angle <= -360.f)
+    {
+        temp_hex_angle = 0.f;
+        return false;
+    }
+
+    glm::vec3 vertices[] =
+    {
+        m_temphex_vertices[0].position, m_temphex_vertices[1].position, m_temphex_vertices[2].position,
+        m_temphex_vertices[3].position, m_temphex_vertices[4].position, m_temphex_vertices[5].position,
+        m_temphex_vertices[6].position, m_temphex_vertices[7].position, m_temphex_vertices[8].position,
+        m_temphex_vertices[9].position, m_temphex_vertices[10].position, m_temphex_vertices[11].position
+    };
+
+    glm::vec4 dimensions = glm::vec4(1.f, 57.f / 150.f, (75.f * sqrtf(3.f)) / 150.f, 1.f);
+
+    float w = dimensions.x;
+    float h = dimensions.y;
+    float d = dimensions.z;
+
+    float x = temp_hex_pos.x;
+    float y = temp_hex_pos.y;
+    float z = temp_hex_pos.z;
+    if (temp_hex_angle == 0)
+    {
+        if (forwardScroll)
+        {
+            rotateHexAroundSomePoint(vertices, rotate, glm::vec3(x, y - h, z - d), glm::vec3(1.f, 0.f, 0.f));
+        }
+        else
+        {
+            rotateHexAroundSomePoint(vertices, rotate, glm::vec3(x, y + h, z - d), glm::vec3(1.f, 0.f, 0.f));
+        }
+        temp_hex_angle += rotate;
+    }
+    else if (temp_hex_angle <= 0)
+    {
+        rotateHexAroundSomePoint(vertices, rotate, glm::vec3(x, y + h, z - d), glm::vec3(1.f, 0.f, 0.f));
+        temp_hex_angle += rotate;
+    }
+    else if (temp_hex_angle >= 0)
+    {
+        rotateHexAroundSomePoint(vertices, rotate, glm::vec3(x, y - h, z - d), glm::vec3(1.f, 0.f, 0.f));
+        temp_hex_angle += rotate;
+    }
+    
+    m_temphex_vertices[0].position = vertices[0]; m_temphex_vertices[1].position  = vertices[1]; m_temphex_vertices[2].position  = vertices[2];
+    m_temphex_vertices[3].position = vertices[3]; m_temphex_vertices[4].position  = vertices[4]; m_temphex_vertices[5].position  = vertices[5];
+    m_temphex_vertices[6].position = vertices[6]; m_temphex_vertices[7].position  = vertices[7]; m_temphex_vertices[8].position  = vertices[8];
+    m_temphex_vertices[9].position = vertices[9]; m_temphex_vertices[10].position = vertices[10]; m_temphex_vertices[11].position = vertices[11];
+
+
+    glBindVertexArray(m_VAO_temphex);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO_temphex);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_temphex_vertices), m_temphex_vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO_temphex);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_temphex_indices), m_temphex_indices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (const void*)offsetof(Vertex, position));
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (const void*)offsetof(Vertex, color));
+
+    return true;
+}
+
+bool HexaScene::ConfirmTempHex()
+{
+    if (!temp_hex) return false;
+
+    InsertHexagon(temp_hex_pos, glm::vec3(1.f, 1.f, 0.f), 1, temp_hex_angle);
+    temp_hex = false;
+
+    return true;
+}
+
 bool inBounds(glm::vec2 mouse, glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 d)
 {
     // lines go like
@@ -374,12 +482,100 @@ bool inBounds(glm::vec2 mouse, glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 
     return belowTop && aboveBot && leftRit && rightLef;
 }
 
+void HexaScene::InsertTempHex(glm::vec3 position, glm::vec3 color)
+{
+    temp_hex_angle = 0.f;
+    glm::vec4 dimensions = glm::vec4(1.f, 57.f / 150.f, (75.f * sqrtf(3.f)) / 150.f, 1.f);
+
+    temp_hex_pos = position;
+
+    float w = dimensions.x;
+    float h = dimensions.y;
+    float d = dimensions.z;
+
+    float x = position.x;
+    float y = position.y;
+    float z = position.z;
+
+
+    glm::vec3 hexVertices[12] = {
+        glm::vec3(w + x, -h + y, 0.f + z),
+        glm::vec3(w / 2.f + x, -h + y, d + z),
+        glm::vec3(-w / 2.f + x, -h + y, d + z),
+        glm::vec3(-w + x, -h + y, 0.f + z),
+        glm::vec3(-w / 2.f + x, -h + y, -d + z),
+        glm::vec3(w / 2.f + x, -h + y, -d + z),
+        glm::vec3(w + x, h + y, 0.f + z),
+        glm::vec3(w / 2.f + x, h + y, d + z),
+        glm::vec3(-w / 2.f + x, h + y, d + z),
+        glm::vec3(-w + x, h + y, 0 + z),
+        glm::vec3(-w / 2.f + x, h + y, -d + z),
+        glm::vec3(w / 2.f + x, h + y, -d + z)
+    };
+
+    
+
+    {
+        m_temphex_vertices[0] = (Vertex{ hexVertices[0], color });
+        m_temphex_vertices[1] = (Vertex{ hexVertices[1], color });
+        m_temphex_vertices[2] = (Vertex{ hexVertices[2], color });
+        m_temphex_vertices[3] = (Vertex{ hexVertices[3], color });
+        m_temphex_vertices[4] = (Vertex{ hexVertices[4], color });
+        m_temphex_vertices[5] = (Vertex{ hexVertices[5], color });
+
+        m_temphex_vertices[6] = (Vertex{ hexVertices[6], color });
+        m_temphex_vertices[7] = (Vertex{ hexVertices[7], color });
+        m_temphex_vertices[8] = (Vertex{ hexVertices[8], color });
+        m_temphex_vertices[9] = (Vertex{ hexVertices[9], color });
+        m_temphex_vertices[10] = (Vertex{ hexVertices[10], color });
+        m_temphex_vertices[11] = (Vertex{ hexVertices[11], color });
+    }
+
+    {
+        m_temphex_indices[0] = 0;  m_temphex_indices[1] = 1;  m_temphex_indices[2] = 1;  m_temphex_indices[3] = 2;
+        m_temphex_indices[4] = 2;  m_temphex_indices[5] = 3;  m_temphex_indices[6] = 3;  m_temphex_indices[7] = 4;
+        m_temphex_indices[8] = 4;  m_temphex_indices[9] = 5;  m_temphex_indices[10] = 5;  m_temphex_indices[11] = 0;
+        m_temphex_indices[12] = 6;  m_temphex_indices[13] = 7;  m_temphex_indices[14] = 7;  m_temphex_indices[15] = 8;
+        m_temphex_indices[16] = 8;  m_temphex_indices[17] = 9;  m_temphex_indices[18] = 9;  m_temphex_indices[19] = 10;
+        m_temphex_indices[20] = 10; m_temphex_indices[21] = 11; m_temphex_indices[22] = 11; m_temphex_indices[23] = 6;
+        m_temphex_indices[24] = 0;  m_temphex_indices[25] = 6;  m_temphex_indices[26] = 1;  m_temphex_indices[27] = 7;
+        m_temphex_indices[28] = 2;  m_temphex_indices[29] = 8;  m_temphex_indices[30] = 3;  m_temphex_indices[31] = 9;
+        m_temphex_indices[32] = 4;  m_temphex_indices[33] = 10; m_temphex_indices[34] = 5;  m_temphex_indices[35] = 11;
+    }
+
+    glBindVertexArray(m_VAO_temphex);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO_temphex);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_temphex_vertices), m_temphex_vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO_temphex);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_temphex_indices), m_temphex_indices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (const void*)offsetof(Vertex, position));
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (const void*)offsetof(Vertex, color));
+
+    temp_hex = true;
+    /*glm::vec3 b = pot_hits[closest_ind][0];
+    glm::vec3 r = pot_hits[closest_ind][1];
+    glm::vec3 s = pot_hits[closest_ind][2];
+    glm::vec3 normal = glm::cross(r - b, s - b);
+    float x = normal.x * 0.f + hex_min->position.x;
+    float y = normal.y * sqrtf(3.f) + hex_min->position.y;
+    float z = normal.z * 0.f + hex_min->position.z + sqrtf(3.f);
+    pos = glm::vec3(x, y, z);
+    InsertHexagon(pos, glm::vec3(1.f, 0.f, 0.f), 1, 30.f);*/
+}
+
 void HexaScene::CheckIntersections(glm::mat4 projection, glm::mat4 model, glm::vec3 camPos, int width, int height, int mouse_x, int mouse_y)
 {
     float min = -INFINITY;
     Hexagon* hex_min = nullptr;
     std::vector<std::vector<glm::vec3>> pot_hits;
     int closest_ind = -1;
+    uint8_t dir = 0;
     for (auto& hex : hexes)
     {
         int vbo_index = hex->vbo_offset;
@@ -407,6 +603,7 @@ void HexaScene::CheckIntersections(glm::mat4 projection, glm::mat4 model, glm::v
                 closest_ind = pot_hits.size() - 1;
                 hex_min = hex.get();
             }
+            dir = 1;
         }
 
         // face_front_left
@@ -431,6 +628,7 @@ void HexaScene::CheckIntersections(glm::mat4 projection, glm::mat4 model, glm::v
                 closest_ind = pot_hits.size() - 1;
                 hex_min = hex.get();
             }
+            dir = 2;
         }
 
         // face_front_right
@@ -455,10 +653,122 @@ void HexaScene::CheckIntersections(glm::mat4 projection, glm::mat4 model, glm::v
                 closest_ind = pot_hits.size() - 1;
                 hex_min = hex.get();
             }
+            dir = 6;
+        }
+
+        // face_back_right
+        a = WorldToScreen(projection, model, m_vertices[vbo_index + 5].position, width, height);
+        b = WorldToScreen(projection, model, m_vertices[vbo_index + 11].position, width, height);
+        c = WorldToScreen(projection, model, m_vertices[vbo_index + 6].position, width, height);
+        d = WorldToScreen(projection, model, m_vertices[vbo_index + 0].position, width, height);
+        in_bounds = inBounds(mouse, a, b, c, d);
+        if (in_bounds)
+        {
+            // add to list of potential new hits
+            pot_hits.push_back({
+                m_vertices[vbo_index + 5].position,
+                m_vertices[vbo_index + 11].position,
+                m_vertices[vbo_index + 6].position,
+                m_vertices[vbo_index + 0].position
+                });
+
+            if ((m_vertices[vbo_index + 5].position - camPos).z > min)
+            {
+                min = (m_vertices[vbo_index + 5].position - camPos).z;
+                closest_ind = pot_hits.size() - 1;
+                hex_min = hex.get();
+            }
+            dir = 5;
+        }
+
+        // face_back
+        a = WorldToScreen(projection, model, m_vertices[vbo_index + 4].position, width, height);
+        b = WorldToScreen(projection, model, m_vertices[vbo_index + 10].position, width, height);
+        c = WorldToScreen(projection, model, m_vertices[vbo_index + 11].position, width, height);
+        d = WorldToScreen(projection, model, m_vertices[vbo_index + 5].position, width, height);
+        in_bounds = inBounds(mouse, a, b, c, d);
+        if (in_bounds)
+        {
+            // add to list of potential new hits
+            pot_hits.push_back({
+                m_vertices[vbo_index + 4].position,
+                m_vertices[vbo_index + 10].position,
+                m_vertices[vbo_index + 11].position,
+                m_vertices[vbo_index + 5].position
+                });
+
+            if ((m_vertices[vbo_index + 4].position - camPos).z > min)
+            {
+                min = (m_vertices[vbo_index + 4].position - camPos).z;
+                closest_ind = pot_hits.size() - 1;
+                hex_min = hex.get();
+            }
+            dir = 4;
+        }
+
+        // face_back_left
+        a = WorldToScreen(projection, model, m_vertices[vbo_index + 3].position, width, height);
+        b = WorldToScreen(projection, model, m_vertices[vbo_index + 9].position, width, height);
+        c = WorldToScreen(projection, model, m_vertices[vbo_index + 10].position, width, height);
+        d = WorldToScreen(projection, model, m_vertices[vbo_index + 4].position, width, height);
+        in_bounds = inBounds(mouse, a, b, c, d);
+        if (in_bounds)
+        {
+            // add to list of potential new hits
+            pot_hits.push_back({
+                m_vertices[vbo_index + 3].position,
+                m_vertices[vbo_index + 9].position,
+                m_vertices[vbo_index + 10].position,
+                m_vertices[vbo_index + 4].position
+                });
+
+            if ((m_vertices[vbo_index + 3].position - camPos).z > min)
+            {
+                min = (m_vertices[vbo_index + 3].position - camPos).z;
+                closest_ind = pot_hits.size() - 1;
+                hex_min = hex.get();
+            }
+            dir = 3;
         }
     }
     if (closest_ind > -1)
     {
+        // check if there is already a tile at the position
+
+        // insert tile at relevant position
+
+        glm::vec3 pos;
+
+        switch (dir)
+        {
+        case 1: // front
+        {
+            // get the normal of the plane of the face
+            // x remains the same
+            // y and z change
+            glm::vec3 b = pot_hits[closest_ind][0];
+            glm::vec3 r = pot_hits[closest_ind][1];
+            glm::vec3 s = pot_hits[closest_ind][2];
+            glm::vec3 normal = glm::cross(r - b, s - b);
+            float x = normal.x * 0.f + hex_min->position.x;
+            float y = normal.y * 0.f + hex_min->position.y;
+            float z = normal.z * 0.f + hex_min->position.z + sqrtf(3.f);
+            pos = glm::vec3(x, y, z);
+            InsertTempHex(pos, glm::vec3(1.f, 0.f, 0.f));
+            break;
+        }
+        case 2: // front left
+            break;
+        case 3: // back left
+            break;
+        case 4: // back
+            break;
+        case 5: // back right
+            break;
+        case 6: // front rihgt
+            break;
+        }
+
         // highlight
         m_highlight_vertices[0] = Vertex { pot_hits[closest_ind][0], glm::vec3(0.f, 1.f, 1.f) };
         m_highlight_vertices[1] = Vertex { pot_hits[closest_ind][1], glm::vec3(0.f, 1.f, 1.f) };

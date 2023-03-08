@@ -55,6 +55,11 @@ public:
    virtual void OnLMouseClick(wxMouseEvent& event) = 0;
 
    /// <summary>
+   /// Scroll wheel event
+   /// </summary>
+   virtual void OnScroll(wxMouseEvent& event) = 0;
+
+   /// <summary>
    /// Destroy the context, used when shutting down the application
    /// </summary>
    static void DestroyContext();
@@ -133,6 +138,7 @@ private:
    void OnMouseMove(wxMouseEvent& event) override;
    void OnRMouseClick(wxMouseEvent& event) override;
    void OnLMouseClick(wxMouseEvent& event) override;
+   void OnScroll(wxMouseEvent& event) override;
 
 public:
 
